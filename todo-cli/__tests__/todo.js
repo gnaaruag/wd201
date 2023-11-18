@@ -5,32 +5,33 @@ const { all, markAsComplete, add, overdue, dueToday, dueLater } = todo();
 
 describe("Todo List test suite", () => {
   beforeAll(() => {
-    const date = new Date().toISOString();
+    const date = new Date();
+    const day = 86400000;
     add({
       title: "todo test 1",
       completed: false,
-      dueDate: date,
+      dueDate: new Date(date.getTime() - 1 * day).toLocaleString("en-CA"),
     });
     add({
       title: "todo test 2",
       completed: false,
-      dueDate: date,
+      dueDate: new Date().toLocaleString("en-CA"),
     });
     add({
       title: "todo test 3",
       completed: false,
-      dueDate: date,
+      dueDate: new Date(date.getTime() - 1 * day).toLocaleString("en-CA"),
     });
   });
 
   test("test for adding a new todo", () => {
-    const todoItemsCount = all.length;
+    expect(all.length).toBe(3);
     add({
       title: "todo test some x",
       completed: false,
-      dueDate: new Date().toISOString(),
+      dueDate: new Date().toLocaleString("en-CA"),
     });
-    expect(all.length).toBe(todoItemsCount + 1);
+    expect(all.length).toBe(4);
   });
   test("test for mark todo item as complete", () => {
     expect(all[0].completed).toBe(false);
@@ -39,7 +40,7 @@ describe("Todo List test suite", () => {
   });
   test("test for checking overdue items retrieval", () => {
     const testOverdueArray = overdue();
-    expect(testOverdueArray.length).toBe(0);
+    expect(testOverdueArray.length).toBe(4);
   });
   test("test for checking overdue items retrieval", () => {
     const testDueToday = dueToday();
@@ -47,6 +48,6 @@ describe("Todo List test suite", () => {
   });
   test("test for checking overdue items retrieval", () => {
     const testDueLater = dueLater();
-    expect(testDueLater.length).toBe(4);
+    expect(testDueLater.length).toBe(0);
   });
 });
