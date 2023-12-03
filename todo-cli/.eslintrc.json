@@ -10,7 +10,7 @@
   },
   "ignorePatterns": [
     "migrations/**/*.js",
-    "models/**/index.js",
+    "models/**/*.js",
     "__tests__/**/*.js",
     "addTodo.js",
     "completeTodo.js",
