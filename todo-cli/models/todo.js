@@ -56,31 +56,20 @@ module.exports = (sequelize, DataTypes) => {
     static async dueToday() {
       // FILL IN HERE TO RETURN ITEMS DUE tODAY
       return await Todo.findAll({
-        where: {
-          dueDate: { [Op.eq]: new Date().toISOString().slice(0, 10) },
-        },
+        where: { dueDate: { [Op.eq]: new Date().toISOString().slice(0, 10) } },
       });
     }
 
     static async dueLater() {
       // FILL IN HERE TO RETURN ITEMS DUE LATER
       return await Todo.findAll({
-        where: {
-          dueDate: { [Op.gt]: new Date().toISOString().slice(0, 10) },
-        },
+        where: { dueDate: { [Op.gt]: new Date().toISOString().slice(0, 10) } },
       });
     }
 
     static async markAsComplete(id) {
       // FILL IN HERE TO MARK AN ITEM AS COMPLETE
-      await Todo.update(
-        { completed: true },
-        {
-          where: {
-            id,
-          },
-        },
-      );
+      await Todo.update({ completed: true }, { where: { id } });
     }
 
     displayableString() {
