@@ -4,7 +4,9 @@
   "description": "",
   "main": "todo.js",
   "scripts": {
-    "test": "jest",
+    "test": "set NODE_ENV=test&&  jest --detectOpenHandles",
+    "db:create:test": "set NODE_ENV=test&&  npx sequelize-cli db:create",
+    "pretest": "set NODE_ENV=test&&  npx sequelize-cli db:drop&& set NODE_ENV=test&&  npx sequelize-cli db:create",
     "prepare": "cd .. && husky install todo-cli/.husky"
   },
   "keywords": [],
