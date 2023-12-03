@@ -8,6 +8,13 @@
   "parserOptions": {
     "ecmaVersion": "latest"
   },
-  "ignorePatterns": ["migrations/**/*.js", "models/**/index.js", "__tests__/**/*.js", "addTodo.js", "completeTodo.js", "listTodo.js"],
+  "ignorePatterns": [
+    "migrations/**/*.js",
+    "models/**/index.js",
+    "__tests__/**/*.js",
+    "addTodo.js",
+    "completeTodo.js",
+    "listTodo.js"
+  ],
   "rules": {}
 }
