@@ -14,7 +14,7 @@
     "__tests__/**/*.js",
     "addTodo.js",
     "completeTodo.js",
-    "listTodo.js"
+    "listTodos.js"
   ],
   "rules": {}
 }
