@@ -60,7 +60,7 @@ app.put("/todos/:id/markAsCompleted", async (request, response) => {
 app.delete("/todos/:id", async (request, response) => {
   console.log("We have to delete a Todo with ID: ", request.params.id);
   const deleteTodo = await Todo.destroy({ where: { id: request.params.id } });
-  response.send(deleteTodo != null ? true : false);
+  response.send(deleteTodo ? true : false);
 });
 
 module.exports = app;
