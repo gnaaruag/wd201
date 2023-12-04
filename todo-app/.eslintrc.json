@@ -14,5 +14,5 @@
     "quotes": ["error", "double"],
     "semi": ["error", "always"]
   },
-  "ignorePatterns": ["migrations/**/*.js","models/**/*.js"]
+  "ignorePatterns": ["migrations/**/*.js", "models/**/*.js"]
 }
