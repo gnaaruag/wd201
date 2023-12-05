@@ -2,8 +2,21 @@ const express = require("express");
 const app = express();
 const bodyparser = require("body-parser");
 const { Todo } = require("./models");
+const path = require("path");
 
 app.use(bodyparser.json());
+app.set("view engine", "ejs");
+// eslint-disable-next-line no-undef
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", async (request, response) => {
+  const allTodos = await Todo.getTodos();
+  if (request.accepts("html")) {
+    response.render("index", { allTodos });
+  } else {
+    response.json({ allTodos });
+  }
+});
 
 // eslint-disable-next-line no-unused-vars
 app.get("/todos", async (request, response) => {
