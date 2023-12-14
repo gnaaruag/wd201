@@ -22,6 +22,18 @@ module.exports = (sequelize, DataTypes) => {
     markAsCompleted() {
       return this.update({ completed: true });
     }
+
+    alterCompletion(status) {
+      return this.update({ completed: !status });
+    }
+
+    static async remove(id) {
+      return this.destroy({
+        where: {
+          id,
+        },
+      });
+    }
   }
   Todo.init(
     {

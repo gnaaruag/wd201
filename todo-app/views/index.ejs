@@ -6,20 +6,51 @@
     <title>Todo List</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        function updateTodo(id) {
+            fetch(`/todos/${id}`, {
+                method: 'put',
+                headers: { "Content-Type": "application/json" },
+
+            })
+            .then((res) => {
+                if (res.ok) {
+                    window.location.reload();
+                }
+            })
+            .catch((err) => console.log(err));
+        } 
+
+        function deleteTodo(id) {
+            fetch(`/todos/${id}`, {
+                method: 'delete',
+                headers: { "Content-Type": "application/json" },
+
+            })
+            .then((res) => {
+                if (res.ok) {
+                    window.location.reload();
+                }
+            })
+            .catch((err) => console.log(err));
+        }
+    </script>
 </head>
 <body>
     <div class="grid-cols-6 grid">
         <div class="col-start-2 col-span-3">
             <%- include('header.ejs') %>
 
-            <form>
+            <form action="/todos" method="post">
+   
                 <div class="flex gap-2 py-4">
                     <div class="flex-auto">
-                        <input type="text" placeholder="What's next?" required
+                        <input type="text" name ="title" placeholder="What's next?" required
                         class="border border-gray-300 rounded text-gray-900 w-full p-2 text-sm">
                     </div>
                     <div class="flex-auto">
-                        <input type="date"
+                        <input type="date" name="dueDate" required
                         class="leading-4 border border-gray-300 rounded text-gray-900 w-full p-2 text-sm">
                     </div>
                     <div class="flex-none">
