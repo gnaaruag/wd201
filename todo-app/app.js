@@ -35,7 +35,13 @@ app.get("/", async (request, response) => {
       }
     });
 
-    response.render("index", { overdue, dueToday, dueLater, completed });
+    response.render("index", {
+      overdue,
+      dueToday,
+      dueLater,
+      completed,
+      allTodos,
+    });
   } else {
     response.json({ allTodos });
   }
@@ -103,7 +109,7 @@ app.delete("/todos/:id", async (request, response) => {
   try {
     // eslint-disable-next-line no-unused-vars
     const deleteTodo = await Todo.remove(request.params.id);
-    return response.json(true);
+    return response.json(deleteTodo ? true : false);
   } catch (err) {
     console.log(err);
     return response.status(422).json(err);
