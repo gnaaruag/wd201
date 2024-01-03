@@ -1,10 +1,17 @@
 const express = require("express");
 const app = express();
-const csurf = require("csurf");
+// const csurf = require("csurf");
 const bodyparser = require("body-parser");
 const cookieparser = require("cookie-parser");
-const { Todo } = require("./models");
+const { Todo, User } = require("./models");
 const path = require("path");
+const passport = require("passport");
+const connectEnsureLogin = require("connect-ensure-login");
+const session = require("express-session");
+const LocalStrategy = require("passport-local");
+const bcrypt = require("bcrypt");
+
+const salt = 10;
 
 app.use(bodyparser.json());
 app.set("view engine", "ejs");
@@ -13,107 +20,239 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieparser("sfkdslhhihJHUH"));
 // app.use(csurf( { cookie: true } ));
+app.use(
+  session({
+    secret:
+      "some random secreat jillsjdpoisivkasfjsdfksddslvskndknldvsknldvsl iamgoinginsanehelppppppppppp",
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  }),
+);
 
-app.get("/", async (request, response) => {
-  const allTodos = await Todo.getTodos();
-  if (request.accepts("html")) {
-    // const overdue = allTodos.filter(item => item.dueDate < new Date().toISOString().slice(0,10));
-    const overdue = [];
-    const dueToday = [];
-    const dueLater = [];
-    const completed = [];
+app.use(passport.initialize());
+app.use(passport.session());
 
-    allTodos.map((item) => {
-      if (item.completed) {
-        completed.push(item);
-      } else if (item.dueDate < new Date().toISOString().slice(0, 10)) {
-        overdue.push(item);
-      } else if (item.dueDate > new Date().toISOString().slice(0, 10)) {
-        dueLater.push(item);
-      } else {
-        dueToday.push(item);
-      }
-    });
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "email",
+      passwordField: "password",
+    },
+    (username, password, done) => {
+      User.findOne({ where: { email: username } })
+        .then(async (user) => {
+          const revert = await bcrypt.compare(password, user.password);
+          if (revert) {
+            return done(null, user);
+          } else {
+            return done("Invalid Password");
+          }
+        })
+        .catch((error) => {
+          return error;
+        });
+    },
+  ),
+);
 
-    response.render("index", {
-      overdue,
-      dueToday,
-      dueLater,
-      completed,
-      allTodos,
-    });
-  } else {
-    response.json({ allTodos });
-  }
+passport.serializeUser((user, done) => {
+  console.log("Serializing user in session", user.id);
+  done(null, user.id);
 });
 
-// eslint-disable-next-line no-unused-vars
-app.get("/todos", async (request, response) => {
-  console.log("request to fetching all todos");
-
-  try {
-    const todo = await Todo.findAll({ order: [["id", "ASC"]] });
-    return response.json(todo);
-  } catch (error) {
-    console.log(error);
-    return response.status(422).json(error);
-  }
-});
-
-app.get("/todos/:id", async function (request, response) {
-  try {
-    const todo = await Todo.findByPk(request.params.id);
-    return response.json(todo);
-  } catch (error) {
-    console.log(error);
-    return response.status(422).json(error);
-  }
-});
-
-app.post("/todos", async (request, response) => {
-  // console.log(`creating todo for request: ${request.body}`);
-
-  try {
-    const todo = await Todo.addTodo({
-      title: request.body.title,
-      dueDate: request.body.dueDate,
-      completed: false,
+passport.deserializeUser((id, done) => {
+  User.findByPk(id)
+    .then((user) => {
+      done(null, user);
+    })
+    .catch((error) => {
+      done(null, error);
     });
-    console.log(todo);
+});
+
+app.get("/", (request, response) => {
+  response.render("index");
+});
+
+app.get(
+  "/todos",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    const allTodos = await Todo.getTodos();
     if (request.accepts("html")) {
-      return response.redirect("/");
+      // const overdue = allTodos.filter(item => item.dueDate < new Date().toISOString().slice(0,10));
+      const overdue = [];
+      const dueToday = [];
+      const dueLater = [];
+      const completed = [];
+
+      allTodos.map((item) => {
+        if (item.userId === request.user.id) {
+          if (item.completed) {
+            completed.push(item);
+          } else if (item.dueDate < new Date().toISOString().slice(0, 10)) {
+            overdue.push(item);
+          } else if (item.dueDate > new Date().toISOString().slice(0, 10)) {
+            dueLater.push(item);
+          } else {
+            dueToday.push(item);
+          }
+        }
+      });
+
+      response.render("todo", {
+        overdue,
+        dueToday,
+        dueLater,
+        completed,
+        allTodos,
+      });
     } else {
-      return response.json(todo);
+      response.json({ allTodos });
     }
-  } catch (error) {
-    console.log(error);
-    return response.status(422).json(error);
-  }
+  },
+);
+
+// eslint-disable-next-line no-unused-vars
+app.get(
+  "/todos",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    console.log("request to fetching all todos");
+
+    try {
+      const todo = await Todo.findAll({ order: [["id", "ASC"]] });
+      return response.json(todo);
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  },
+);
+
+app.get(
+  "/todos/:id",
+  connectEnsureLogin.ensureLoggedIn(),
+  async function (request, response) {
+    try {
+      const todo = await Todo.findByPk(request.params.id);
+      return response.json(todo);
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  },
+);
+
+app.post(
+  "/todos",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    // console.log(`creating todo for request: ${request.body}`);
+    console.log(request.user.id);
+    try {
+      const todo = await Todo.addTodo({
+        title: request.body.title,
+        dueDate: request.body.dueDate,
+        completed: false,
+        userId: request.user.id,
+      });
+      console.log(todo);
+      if (request.accepts("html")) {
+        return response.redirect("/todos");
+      } else {
+        return response.json(todo);
+      }
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  },
+);
+
+app.put(
+  "/todos/:id",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    // console.log(`updating todo with id: ${request.params.id}`);
+    const todo = await Todo.findByPk(request.params.id);
+    try {
+      const updateTodo = await todo.alterCompletion(todo.completed);
+      return response.json(updateTodo);
+    } catch (error) {
+      console.log(error);
+      return response.status(422).json(error);
+    }
+  },
+);
+
+// eslint-disable-next-line no-unused-vars
+app.delete(
+  "/todos/:id",
+  connectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    console.log("We have to delete a Todo with ID: ", request.params.id);
+    try {
+      // eslint-disable-next-line no-unused-vars
+      const deleteTodo = await Todo.remove(request.params.id);
+      return response.json(deleteTodo ? true : false);
+    } catch (err) {
+      console.log(err);
+      return response.status(422).json(err);
+    }
+  },
+);
+
+app.get("/signup", (request, response) => {
+  response.render("signup");
 });
 
-app.put("/todos/:id", async (request, response) => {
-  // console.log(`updating todo with id: ${request.params.id}`);
-  const todo = await Todo.findByPk(request.params.id);
-  try {
-    const updateTodo = await todo.alterCompletion(todo.completed);
-    return response.json(updateTodo);
-  } catch (error) {
-    console.log(error);
-    return response.status(422).json(error);
-  }
+app.get("/signout", (request, response, next) => {
+  request.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    response.redirect("/");
+  });
 });
 
 // eslint-disable-next-line no-unused-vars
-app.delete("/todos/:id", async (request, response) => {
-  console.log("We have to delete a Todo with ID: ", request.params.id);
+app.post("/users", async (request, response) => {
+  const hashed = await bcrypt.hash(request.body.password, salt);
   try {
-    // eslint-disable-next-line no-unused-vars
-    const deleteTodo = await Todo.remove(request.params.id);
-    return response.json(deleteTodo ? true : false);
-  } catch (err) {
-    console.log(err);
-    return response.status(422).json(err);
+    const user = await User.create({
+      firstName: request.body.firstName,
+      lastName: request.body.lastName,
+      email: request.body.email,
+      password: hashed,
+    });
+    request.login(user, (err) => {
+      if (err) {
+        console.log(err);
+      }
+      response.redirect("/todos");
+    });
+  } catch (error) {
+    console.log(error);
   }
+});
+
+app.get("/login", (request, response) => {
+  response.render("login");
+});
+
+app.post(
+  "/session",
+  passport.authenticate("local", { failureRedirect: "/login" }),
+  (request, response) => {
+    response.redirect("/todos");
+  },
+);
+
+// eslint-disable-next-line no-unused-vars
+app.get("*", (request, response) => {
+  response.send("what?");
 });
 
 module.exports = app;

@@ -27,6 +27,17 @@ describe("Todo Application", function () {
     }
   });
 
+  test("Tests the signup route at /signup endpoint", async () => {
+    let res = await agent.get("/signup");
+    res = await agent.post("/users").send({
+      firstName: "Test",
+      lastName: "User",
+      email: "user.test@test.com",
+      password: "test-password",
+    });
+    expect(res.statusCode).toBe(302);
+  });
+
   test("Creates a todo and responds with json at /todos POST endpoint", async () => {
     const res = await agent
       .post("/todos")
