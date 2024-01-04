@@ -82,6 +82,9 @@ app.use(function (request, response, next) {
 });
 
 app.get("/", (request, response) => {
+  if (request.isAuthenticated()) {
+    return response.redirect("/todos");
+  }
   response.render("index");
 });
 
@@ -111,7 +114,7 @@ app.get(
         }
       });
 
-      response.render("todo", {
+      response.render("todos", {
         overdue,
         dueToday,
         dueLater,
