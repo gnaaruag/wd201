@@ -242,9 +242,18 @@ app.get("/signout", (request, response, next) => {
 
 // eslint-disable-next-line no-unused-vars
 app.post("/users", async (request, response) => {
-  if (!request.body.password) {
-    request.flash("error", "password not supplied");
-    response.redirect("/signup");
+  if (request.body.email.length == 0) {
+    request.flash("error", "Email cant empty!");
+    return response.redirect("/signup");
+  }
+
+  if (request.body.firstName.length == 0) {
+    request.flash("error", "First name cant empty!");
+    return response.redirect("/signup");
+  }
+  if (request.body.password.length < 1) {
+    request.flash("error", "Password not given");
+    return response.redirect("/signup");
   }
   const hashed = await bcrypt.hash(request.body.password, salt);
   try {
