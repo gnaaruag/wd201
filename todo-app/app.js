@@ -283,8 +283,5 @@ app.post(
 );
 
 // eslint-disable-next-line no-unused-vars
-app.get("*", (request, response) => {
-  response.send("what?");
-});
 
 module.exports = app;
