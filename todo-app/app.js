@@ -10,6 +10,11 @@ const connectEnsureLogin = require("connect-ensure-login");
 const session = require("express-session");
 const LocalStrategy = require("passport-local");
 const bcrypt = require("bcrypt");
+const flash = require("connect-flash");
+
+// eslint-disable-next-line no-undef
+app.set("views", path.join(__dirname, "views"));
+app.use(flash());
 
 const salt = 10;
 
@@ -46,7 +51,7 @@ passport.use(
           if (revert) {
             return done(null, user);
           } else {
-            return done("Invalid Password");
+            return done(null, false, { message: "Invalid Password" });
           }
         })
         .catch((error) => {
@@ -69,6 +74,11 @@ passport.deserializeUser((id, done) => {
     .catch((error) => {
       done(null, error);
     });
+});
+
+app.use(function (request, response, next) {
+  response.locals.messages = request.flash();
+  next();
 });
 
 app.get("/", (request, response) => {
@@ -166,7 +176,8 @@ app.post(
       }
     } catch (error) {
       console.log(error);
-      return response.status(422).json(error);
+      request.flash("error", "Failed to add todo. Please try again.");
+      return response.redirect("/todos");
     }
   },
 );
@@ -219,6 +230,10 @@ app.get("/signout", (request, response, next) => {
 
 // eslint-disable-next-line no-unused-vars
 app.post("/users", async (request, response) => {
+  if (!request.body.password) {
+    request.flash("error", "password not supplied");
+    response.redirect("/signup");
+  }
   const hashed = await bcrypt.hash(request.body.password, salt);
   try {
     const user = await User.create({
@@ -235,6 +250,7 @@ app.post("/users", async (request, response) => {
     });
   } catch (error) {
     console.log(error);
+    request.flash("error", "couldnt create user");
   }
 });
 
@@ -244,8 +260,12 @@ app.get("/login", (request, response) => {
 
 app.post(
   "/session",
-  passport.authenticate("local", { failureRedirect: "/login" }),
+  passport.authenticate("local", {
+    failureRedirect: "/login",
+    failureFlash: true,
+  }),
   (request, response) => {
+    request.flash("error");
     response.redirect("/todos");
   },
 );
