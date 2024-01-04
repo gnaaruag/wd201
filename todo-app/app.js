@@ -18,6 +18,7 @@ app.use(flash());
 
 const salt = 10;
 
+app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 app.set("view engine", "ejs");
 // eslint-disable-next-line no-undef
@@ -45,18 +46,22 @@ passport.use(
       passwordField: "password",
     },
     (username, password, done) => {
-      User.findOne({ where: { email: username } })
-        .then(async (user) => {
-          const revert = await bcrypt.compare(password, user.password);
-          if (revert) {
-            return done(null, user);
-          } else {
-            return done(null, false, { message: "Invalid Password" });
-          }
-        })
-        .catch((error) => {
-          return error;
-        });
+      try {
+        User.findOne({ where: { email: username } })
+          .then(async (user) => {
+            const revert = await bcrypt.compare(password, user.password);
+            if (revert) {
+              return done(null, user);
+            } else {
+              return done(null, false, { message: "Invalid Password" });
+            }
+          })
+          .catch((error) => {
+            return error;
+          });
+      } catch (err) {
+        console.log(err);
+      }
     },
   ),
 );
@@ -92,37 +97,41 @@ app.get(
   "/todos",
   connectEnsureLogin.ensureLoggedIn(),
   async (request, response) => {
-    const allTodos = await Todo.getTodos();
-    if (request.accepts("html")) {
-      // const overdue = allTodos.filter(item => item.dueDate < new Date().toISOString().slice(0,10));
-      const overdue = [];
-      const dueToday = [];
-      const dueLater = [];
-      const completed = [];
+    try {
+      const allTodos = await Todo.getTodos();
+      if (request.accepts("html")) {
+        // const overdue = allTodos.filter(item => item.dueDate < new Date().toISOString().slice(0,10));
+        const overdue = [];
+        const dueToday = [];
+        const dueLater = [];
+        const completed = [];
 
-      allTodos.map((item) => {
-        if (item.userId === request.user.id) {
-          if (item.completed) {
-            completed.push(item);
-          } else if (item.dueDate < new Date().toISOString().slice(0, 10)) {
-            overdue.push(item);
-          } else if (item.dueDate > new Date().toISOString().slice(0, 10)) {
-            dueLater.push(item);
-          } else {
-            dueToday.push(item);
+        allTodos.map((item) => {
+          if (item.userId === request.user.id) {
+            if (item.completed) {
+              completed.push(item);
+            } else if (item.dueDate < new Date().toISOString().slice(0, 10)) {
+              overdue.push(item);
+            } else if (item.dueDate > new Date().toISOString().slice(0, 10)) {
+              dueLater.push(item);
+            } else {
+              dueToday.push(item);
+            }
           }
-        }
-      });
+        });
 
-      response.render("todos", {
-        overdue,
-        dueToday,
-        dueLater,
-        completed,
-        allTodos,
-      });
-    } else {
-      response.json({ allTodos });
+        response.render("todos", {
+          overdue,
+          dueToday,
+          dueLater,
+          completed,
+          allTodos,
+        });
+      } else {
+        response.json({ allTodos });
+      }
+    } catch (err) {
+      console.log(err);
     }
   },
 );
@@ -223,7 +232,7 @@ app.get("/signup", (request, response) => {
 });
 
 app.get("/signout", (request, response, next) => {
-  request.logout((err) => {
+  request.logOut((err) => {
     if (err) {
       return next(err);
     }
