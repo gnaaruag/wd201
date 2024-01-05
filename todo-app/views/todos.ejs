@@ -8,8 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        function updateTodo(id) {
-            fetch(`/todo/${id}`, {
+        async function updateTodo(id) {
+            await fetch(`/todos/${id}`, {
                 method: 'put',
                 headers: { "Content-Type": "application/json" },
 
@@ -22,8 +22,8 @@
             .catch((err) => console.log(err));
         } 
 
-        function deleteTodo(id) {
-            fetch(`/todo/${id}`, {
+        async function deleteTodo(id) {
+            await fetch(`/todos/${id}`, {
                 method: 'delete',
                 headers: { "Content-Type": "application/json" },
 
@@ -42,7 +42,7 @@
         <div class="col-start-2 col-span-3">
             <%- include('header.ejs') %>
             <a href="/signout">signout</a>
-            <form action="/todo" method="post">  
+            <form action="/todos" method="post">  
                 <div class="flex gap-2 py-4">
                     <div class="flex-auto">
                         <input type="text" name ="title" placeholder="What's next?" required
