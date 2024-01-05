@@ -231,15 +231,6 @@ app.get("/signup", (request, response) => {
   response.render("signup");
 });
 
-app.get("/signout", (request, response, next) => {
-  request.logOut((err) => {
-    if (err) {
-      return next(err);
-    }
-    response.redirect("/");
-  });
-});
-
 // eslint-disable-next-line no-unused-vars
 app.post("/users", async (request, response) => {
   if (request.body.email.length == 0) {
@@ -291,6 +282,13 @@ app.post(
   },
 );
 
-// eslint-disable-next-line no-unused-vars
+app.get("/signout", (request, response, next) => {
+  request.logOut((err) => {
+    if (err) {
+      return next(err);
+    }
+    response.redirect("/");
+  });
+});
 
 module.exports = app;
