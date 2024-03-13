@@ -1,4 +1,1 @@
-# wd201
-repository for pupilfirst's wd201 course
-
-deployment for milestone 7 - https://todo-app-gnaaruag.onrender.com/
+Course Repository for WD201, by pupilfirst.school
